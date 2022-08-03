@@ -79,6 +79,17 @@ func (d *Database) Scan(rows *sql.Rows, dest interface{}) error {
 	return d.db.ScanRows(rows, &dest)
 }
 
+func (d *Database) AddRawToGuestbook(info Guestbook) {
+	d.db.Create(&Guestbook{
+		ID:        info.ID,
+		Message:   info.Message,
+		IP:        info.IP,
+		Created:   info.Created,
+		UserAgent: info.UserAgent,
+		Nickname:  info.Nickname,
+	})
+}
+
 func (d *Database) AddToGuestbook(info GuestbookRequest) {
 	now := time.Now()
 

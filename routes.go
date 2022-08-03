@@ -84,6 +84,25 @@ func POST_Guestbook(c *gin.Context) {
 	c.Status(200)
 }
 
+func POST_Fillup(c *gin.Context) {
+	var requestBody Guestbook
+	website := c.Param("website")
+
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "There was an error with the request.",
+		})
+		return
+	}
+
+	db := GetDB(website)
+	defer db.Close()
+
+	db.AddRawToGuestbook(requestBody)
+
+	c.Status(200)
+}
+
 func GET_Guestbook(c *gin.Context) {
 	website := c.Param("website")
 	qp, ok := c.GetQuery("page")

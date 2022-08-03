@@ -9,6 +9,7 @@ func main() {
 	api := router.Group("/v1")
 	{
 		api.POST("/guestbook/:website", POST_Guestbook)
+		api.POST("/fillup/:website", POST_Fillup)
 		api.GET("/guestbook/:website", GET_Guestbook)
 		api.DELETE("/guestbook/:website/:id", DELETE_Guestbook)
 	}
