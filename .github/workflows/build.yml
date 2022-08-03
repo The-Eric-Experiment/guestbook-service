@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    name: Build guestbook-service
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build container
+      run: docker-compose -f "../../../../docker-compose.yml" up -d --build

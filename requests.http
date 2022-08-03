@@ -1,0 +1,15 @@
+@port = 8181
+@website = oldavista.com
+
+GET http://localhost:{{port}}/v1/guestbook/{{website}}?page=1
+
+POST http://localhost:{{port}}/v1/guestbook/{{website}}
+{
+    "message": "Lorem ipsum dolor sit amet, www.google.com consectetur adipiscing elit.",
+    "nickname": "The eric experiment",
+    "ip": "200.15.56.25",
+    "userAgent": "blah2222345333333333"
+}
+
+DELETE http://localhost:{{port}}/v1/guestbook/{{website}}?id=
+

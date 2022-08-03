@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  guestbook-service:
+    image: guestbook-service
+    build:
+      context: ~/guestbook-service-runner/_work/guestbook-service/guestbook-service
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:9020:8181"
+    volumes:
+      - ./guestbook-service-data:/app/data
+    networks:
+      - ericexperiment
+    restart: always
