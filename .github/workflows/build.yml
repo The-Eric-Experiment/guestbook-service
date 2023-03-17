@@ -13,4 +13,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build container
-      run: docker-compose -f "../../../../docker-compose.yml" up -d --build
+      run: cat ~/rebuild.sh | bash
