@@ -10,7 +10,7 @@ import (
 
 // New function to check if a site exists in the sites.yaml file
 func checkSiteExists(siteName string) error {
-	var sites Sites
+	var sites []Site
 
 	_, err := os.Stat("data/sites.yaml")
 	if err != nil {
@@ -27,7 +27,7 @@ func checkSiteExists(siteName string) error {
 		return fmt.Errorf("The site does not exist")
 	}
 
-	for _, site := range sites.Sites {
+	for _, site := range sites {
 		if site.Name == siteName {
 			return nil
 		}

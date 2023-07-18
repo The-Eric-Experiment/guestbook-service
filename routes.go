@@ -199,7 +199,7 @@ func POST_Site(c *gin.Context) {
 		return
 	}
 
-	var sites Sites
+	var sites []Site
 	_, err := os.Stat("data/sites.yaml")
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -235,7 +235,7 @@ func POST_Site(c *gin.Context) {
 	}
 
 	// Append the new site to the list and write back to the file
-	sites.Sites = append(sites.Sites, newSite)
+	sites = append(sites, newSite)
 	file, err := yaml.Marshal(&sites)
 	if err != nil {
 		log.Fatalf("Marshal: %v", err)
@@ -273,7 +273,7 @@ func GET_Sites(c *gin.Context) {
 		return
 	}
 
-	var sites Sites
+	var sites []Site
 	err = yaml.Unmarshal(file, &sites)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
@@ -286,6 +286,6 @@ func GET_Sites(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"data":   sites.Sites,
+		"data":   sites,
 	})
 }
