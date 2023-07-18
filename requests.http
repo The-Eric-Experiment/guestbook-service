@@ -13,3 +13,10 @@ POST http://localhost:{{port}}/v1/guestbook/{{website}}
 
 DELETE http://localhost:{{port}}/v1/guestbook/{{website}}?id=
 
+GET http://localhost:{{port}}/v1/sites
+
+POST http://localhost:{{port}}/v1/sites
+{
+    "name": "ericexperiment.com"
+}
+

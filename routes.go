@@ -1,13 +1,18 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
 	"math"
+	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
 
 	goaway "github.com/TwiN/go-away"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/yaml.v2"
 )
 
 type ErrorResponse struct {
@@ -24,6 +29,13 @@ type GuestbookResponse struct {
 func POST_Guestbook(c *gin.Context) {
 	var requestBody GuestbookRequest
 	website := c.Param("website")
+
+	if err := checkSiteExists(website); err != nil {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.IndentedJSON(400, &ErrorResponse{
@@ -88,6 +100,13 @@ func POST_Fillup(c *gin.Context) {
 	var requestBody Guestbook
 	website := c.Param("website")
 
+	if err := checkSiteExists(website); err != nil {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.IndentedJSON(400, &ErrorResponse{
 			Message: "There was an error with the request.",
@@ -105,6 +124,14 @@ func POST_Fillup(c *gin.Context) {
 
 func GET_Guestbook(c *gin.Context) {
 	website := c.Param("website")
+
+	if err := checkSiteExists(website); err != nil {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	qp, ok := c.GetQuery("page")
 
 	if !ok {
@@ -139,6 +166,14 @@ func GET_Guestbook(c *gin.Context) {
 
 func DELETE_Guestbook(c *gin.Context) {
 	website := c.Param("website")
+
+	if err := checkSiteExists(website); err != nil {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	id, ok := c.GetQuery("id")
 
 	if !ok {
@@ -152,4 +187,105 @@ func DELETE_Guestbook(c *gin.Context) {
 	db.DeleteGuestbook(id)
 
 	c.Status(200)
+}
+
+func POST_Site(c *gin.Context) {
+	var newSite Site
+	if err := c.ShouldBindJSON(&newSite); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Invalid JSON provided",
+		})
+		return
+	}
+
+	var sites Sites
+	_, err := os.Stat("data/sites.yaml")
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Printf("Cannot stat file: %v ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "Cannot stat file",
+			})
+			return
+		}
+		// If the file does not exist, it's OK - we'll create it later
+	} else {
+		// If the file exists, read the existing sites
+		file, err := ioutil.ReadFile("data/sites.yaml")
+		if err != nil {
+			log.Printf("yamlFile.Get err   #%v ", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "Failed to read file",
+			})
+			return
+		}
+
+		err = yaml.Unmarshal(file, &sites)
+		if err != nil {
+			log.Fatalf("Unmarshal: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "Failed to parse file",
+			})
+			return
+		}
+	}
+
+	// Append the new site to the list and write back to the file
+	sites.Sites = append(sites.Sites, newSite)
+	file, err := yaml.Marshal(&sites)
+	if err != nil {
+		log.Fatalf("Marshal: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to marshal file",
+		})
+		return
+	}
+	err = ioutil.WriteFile("data/sites.yaml", file, 0644)
+	if err != nil {
+		log.Fatalf("WriteFile: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to write to file",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Site added successfully",
+		"data":    newSite,
+	})
+}
+
+func GET_Sites(c *gin.Context) {
+	file, err := ioutil.ReadFile("data/sites.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to read file",
+		})
+		return
+	}
+
+	var sites Sites
+	err = yaml.Unmarshal(file, &sites)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to parse file",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   sites.Sites,
+	})
 }
