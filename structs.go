@@ -1,5 +1,5 @@
 package main
 
 type Site struct {
-	Name string `yaml:"name"`
+	Name string `json:"name"`
 }
