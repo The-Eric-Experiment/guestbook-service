@@ -174,9 +174,9 @@ func DELETE_Guestbook(c *gin.Context) {
 		return
 	}
 
-	id, ok := c.GetQuery("id")
+	id := c.Param("id")
 
-	if !ok {
+	if id == "" {
 		c.Status(400)
 		return
 	}
