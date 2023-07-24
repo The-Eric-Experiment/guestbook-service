@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -14,17 +15,17 @@ func checkSiteExists(siteName string) error {
 
 	_, err := os.Stat("data/sites.yaml")
 	if err != nil {
-		return fmt.Errorf("The site does not exist")
+		return fmt.Errorf("the site does not exist")
 	}
 
 	file, err := ioutil.ReadFile("data/sites.yaml")
 	if err != nil {
-		return fmt.Errorf("The site does not exist")
+		return fmt.Errorf("the site does not exist")
 	}
 
 	err = yaml.Unmarshal(file, &sites)
 	if err != nil {
-		return fmt.Errorf("The site does not exist")
+		return fmt.Errorf("the site does not exist")
 	}
 
 	for _, site := range sites {
@@ -33,5 +34,21 @@ func checkSiteExists(siteName string) error {
 		}
 	}
 
-	return fmt.Errorf("The site does not exist")
+	return fmt.Errorf("the site does not exist")
+}
+
+func checkConsecutiveCharacters(s string) bool {
+	s = strings.ToLower(s) // convert string to all lowercase for case-insensitivity
+	count := 1
+	for i := 1; i < len(s); i++ {
+		if s[i-1] == s[i] {
+			count++
+			if count >= 5 {
+				return true
+			}
+		} else {
+			count = 1
+		}
+	}
+	return false
 }

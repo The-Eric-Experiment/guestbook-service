@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	goaway "github.com/TwiN/go-away"
@@ -63,16 +64,58 @@ func POST_Guestbook(c *gin.Context) {
 		return
 	}
 
-	if len(requestBody.Message) >= MAXIMUM_CHARACTERS {
+	if requestBody.Nickname == "" {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "Please insert a nickname before posting.",
+		})
+		return
+	}
+
+	if len(requestBody.Nickname) < MINIMUM_NICKNAME_LENGTH {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "Choose a better nickname.",
+		})
+		return
+	}
+
+	if len(requestBody.Nickname) > MAXIMUM_NICKNAME_LENGTH {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "Nickname is too long. Please limit it to " + strconv.Itoa(MAXIMUM_NICKNAME_LENGTH) + " characters.",
+		})
+		return
+	}
+
+	if len(requestBody.Message) > MAXIMUM_CHARACTERS {
 		c.IndentedJSON(400, &ErrorResponse{
 			Message: "Please remain within " + strconv.Itoa(MAXIMUM_CHARACTERS) + " characters in your message.",
 		})
 		return
 	}
 
-	if requestBody.Nickname == "" {
+	if match, _ := regexp.MatchString(`[a-zA-Z]`, requestBody.Nickname); !match {
 		c.IndentedJSON(400, &ErrorResponse{
-			Message: "Please insert a nickname before posting.",
+			Message: "A Nickname has to have letters in it.",
+		})
+		return
+	}
+
+	if checkConsecutiveCharacters(requestBody.Message) {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "No flooding or spamming please, write a real message!",
+		})
+		return
+	}
+
+	if checkConsecutiveCharacters(requestBody.Nickname) {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "Your nickname can't possibly be the same letter over and over.",
+		})
+		return
+	}
+
+	if goaway.IsProfane(requestBody.Nickname) {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "Please be nice, let's keep the guestbook friendly and clean.",
 		})
 		return
 	}
@@ -84,9 +127,24 @@ func POST_Guestbook(c *gin.Context) {
 		return
 	}
 
+	if strings.EqualFold(requestBody.Nickname, requestBody.Message) {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "How are your message and nickname the same?",
+		})
+		return
+	}
+
 	if match, _ := regexp.MatchString(`https?:\/\/([^\.]+\.)?[^\.]+\.[^\/\.]{2,4}[\/]?`, requestBody.Message); match == true {
 		c.IndentedJSON(400, &ErrorResponse{
 			Message: "URLs are not allowed in the Guestbook.",
+		})
+		return
+	}
+
+	words := strings.Fields(requestBody.Message)
+	if len(words) < MINIMUM_MESSAGE_WORDS {
+		c.IndentedJSON(400, &ErrorResponse{
+			Message: "You can do better than that, tell us a bit about yourself!",
 		})
 		return
 	}
